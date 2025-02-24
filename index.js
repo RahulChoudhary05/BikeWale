@@ -22,7 +22,7 @@ database.connect();
 // Middleware Setup
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({ origin: "http://localhost:3000", credentials: true })); // Adjust the origin for production
+app.use(cors({ origin: "https://bikewale-wyxw.onrender.com", credentials: true })); // Adjust the origin for production
 app.use(
   fileUpload({
     useTempFiles: true, // Enable temporary file use
