@@ -63,7 +63,7 @@ exports.signup = async (req, res) => {
     }
 
     // Find the most recent OTP for the email
-    const otpRecord = await OTP.findOne({ email }).sort({ createdAt: -1 });
+    const otpRecord = await OTP.find({ email }).sort({ createdAt: -1 }).limit(1);
     if (!otpRecord || otp !== otpRecord.otp) {
       return res.status(400).json({
         success: false,
