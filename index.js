@@ -22,48 +22,30 @@ database.connect();
 // Middleware Setup
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({ origin: "http://localhost:3000", credentials: true })); // Adjust the origin for production
-app.use(
-  fileUpload({
-    useTempFiles: true, // Enable temporary file use
-    tempFileDir: "/tmp/", // Directory to store temporary files (you can customize this path)
-    createParentPath: true, // Create directory automatically if it doesn't exist
-    limits: { fileSize: 10 * 1024 * 1024 }, // Set file size limit (optional, e.g., 10 MB)
-  })
-);
-
+app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+app.use(fileUpload({ useTempFiles: true, tempFileDir: "/tmp/", createParentPath: true, limits: { fileSize: 10 * 1024 * 1024 } }));
 
 // Routes Setup
 app.use("/api/v1/auth", userRoutes);
 app.use("/api/v1/profile", profileRoutes);
-app.use("/api/v1/bike", bikeRoutes); // Bike routes
+app.use("/api/v1/bike", bikeRoutes);
 app.use("/api/v1/reach", contactUsRoute);
 
 // Default Route
 app.get("/", (req, res) => {
-  res.json({
-    success: true,
-    message: "Your server is up and running...",
-  });
+  res.json({ success: true, message: "Your server is up and running..." });
 });
 
 // Error Handling for Undefined Routes
 app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: "Route not found",
-  });
+  res.status(404).json({ success: false, message: "Route not found" });
 });
 
 // Global Error Handler
 app.use((err, req, res, next) => {
   console.error("Server Error:", err);
-  res.status(500).json({
-    success: false,
-    message: "An internal server error occurred",
-  });
+  res.status(500).json({ success: false, message: "An internal server error occurred" });
 });
-
 
 // Start Server
 app.listen(PORT, () => {
