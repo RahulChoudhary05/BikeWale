@@ -41,23 +41,19 @@ exports.signup = async (req, res) => {
     ) {
       return res.status(400).json({
         success: false,
-        message: "All fields are required. Please fill out all fields correctly.",
+        message: "All Fields are required",
       });
     }
 
-    // Trim and validate passwords to ensure no invisible characters (spaces, tabs, etc.)
-    const trimmedPassword = password.trim();
-    const trimmedConfirmPassword = confirmPassword.trim();
-
     // Check if password and confirm password match
-    if (trimmedPassword !== trimmedConfirmPassword) {
+    if (password !== confirmPassword) {
       return res.status(400).json({
         success: false,
         message: "Password and Confirm Password do not match. Please try again.",
       });
     }
 
-    // Check if user already exists by email
+    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
@@ -66,36 +62,40 @@ exports.signup = async (req, res) => {
       });
     }
 
-    // Find the most recent OTP for the email and validate it
+    // Find the most recent OTP for the email
     const otpRecord = await OTP.findOne({ email }).sort({ createdAt: -1 });
     if (!otpRecord || otp !== otpRecord.otp) {
       return res.status(400).json({
         success: false,
-        message: "The OTP you entered is not valid. Please check again.",
+        message: "The OTP is not valid",
       });
     }
 
-    // Hash the password for security using bcrypt
-    const hashedPassword = await bcrypt.hash(trimmedPassword, 10);
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Check if a user with the same driving license number already exists
+    // Validate the driving license number
+    // if (!isValidDrivingLicenseNumber(drivingLicenseNo)) {
+    //   return res.status(400).json({ success: false, message: "Invalid Indian driving license number format" });
+    // }
+
+    // Check if user with the same driving license number already exists
     const existingLicenseUser = await User.findOne({ drivingLicenseNo });
     if (existingLicenseUser) {
       return res.status(400).json({
         success: false,
-        message:
-          "A user with this driving license number already exists. Please use a different driving license number.",
+        message: "User with this driving license number already exists. Please use a different driving license number.",
       });
     }
 
-    // Create the user's profile with default values
+    // Create the additional profile for user
     const profileDetails = await Profile.create({
       gender: null,
       dateofBirth: null,
       about: null,
     });
 
-    // Create the user and link the profile
+    // Create the user with the validated driving license and contact number
     const user = await User.create({
       fullName,
       email,
@@ -106,8 +106,9 @@ exports.signup = async (req, res) => {
       image: `https://api.dicebear.com/5.x/initials/svg?seed=${fullName}`,
     });
 
-    // Return a successful response with user details
-    return res.status(201).json({
+
+    // Return response with all necessary details
+    return res.status(200).json({
       success: true,
       user: {
         fullName: user.fullName,
@@ -121,15 +122,13 @@ exports.signup = async (req, res) => {
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       },
-      message: "User registered successfully!",
+      message: "User registered successfully",
     });
   } catch (error) {
-    console.error("Error during user signup:", error.message);
-
-    // Return a generic error response
+    console.error(error);
     return res.status(500).json({
       success: false,
-      message: "An error occurred during registration. Please try again later.",
+      message: "User cannot be registered. Please try again.",
     });
   }
 };
