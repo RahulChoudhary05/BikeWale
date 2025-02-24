@@ -63,7 +63,7 @@ exports.signup = async (req, res) => {
     }
 
     // Find the most recent OTP for the email
-    const otpRecord = await OTP.find({ email }).sort({ createdAt: -1 }).limit(1);
+    const otpRecord = await OTP.findOne({ email }).sort({ createdAt: -1 });
     if (!otpRecord || otp !== otpRecord.otp) {
       return res.status(400).json({
         success: false,
@@ -202,51 +202,95 @@ exports.login = async (req, res) => {
 };
 
 // Send OTP For Email Verification
+// Send OTP For Email Verification
 exports.sendotp = async (req, res) => {
   try {
     const { email } = req.body;
 
-    // Check if user is already present
-    // Find user with provided email
-    const checkUserPresent = await User.findOne({ email });
-    // to be used in case of signup
-
-    // If user found with provided email
-    if (checkUserPresent) {
-      // Return 401 Unauthorized status code with error message
-      return res.status(401).json({
+    // Check if email is provided in the request
+    if (!email) {
+      return res.status(400).json({
         success: false,
-        message: `User is Already Registered`,
+        message: "Email is required",
       });
     }
 
-    var otp = otpGenerator.generate(6, {
+    // Check if user is already present (optional, for signup validation)
+    const checkUserPresent = await User.findOne({ email });
+    if (checkUserPresent) {
+      return res.status(400).json({
+        success: false,
+        message: "User is already registered.",
+      });
+    }
+
+    // Check if an OTP for this email already exists and is valid (within 5 minutes)
+    const existingOtp = await OTP.findOne({
+      email,
+      createdAt: { $gte: new Date(Date.now() - 5 * 60 * 1000) }, // Checks OTPs created within the last 5 minutes
+    });
+
+    if (existingOtp) {
+      return res.status(200).json({
+        success: true,
+        message: "OTP already sent. Check your email.",
+      });
+    }
+
+    // Generate a unique 6-digit OTP
+    let otp = otpGenerator.generate(6, {
       upperCaseAlphabets: false,
       lowerCaseAlphabets: false,
       specialChars: false,
     });
-    const result = await OTP.findOne({ otp: otp });
-    console.log("Result is Generate OTP Func");
-    console.log("OTP", otp);
-    console.log("Result", result);
-    while (result) {
+
+    console.log("Generated OTP:", otp);
+
+    // Ensure OTP is unique (although this is unlikely for a 6-digit numeric OTP)
+    while (await OTP.findOne({ otp })) {
       otp = otpGenerator.generate(6, {
         upperCaseAlphabets: false,
+        lowerCaseAlphabets: false,
+        specialChars: false,
       });
     }
-    const otpPayload = { email, otp };
-    const otpBody = await OTP.create(otpPayload);
-    console.log("OTP Body", otpBody);
-    res.status(200).json({
+
+    // Save the OTP in the database
+    const otpPayload = new OTP({ email, otp });
+    await otpPayload.save();
+
+    console.log("OTP successfully saved for email:", email);
+
+    // TODO: Send OTP via email (implement `mailSender` to send the OTP to the user)
+    try {
+      const emailResponse = await mailSender(
+        email,
+        "Your OTP Code",
+        `Your OTP is ${otp}. It is valid for the next 5 minutes.`
+      );
+      console.log("OTP email sent successfully:", emailResponse.response);
+    } catch (error) {
+      console.error("Error while sending OTP email:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send OTP. Please try again later.",
+      });
+    }
+
+    return res.status(200).json({
       success: true,
-      message: `OTP Sent Successfully`,
-      otp,
+      message: "OTP sent successfully.",
+      otp, // Only send OTP in the response for development purposes (remove in production).
     });
   } catch (error) {
-    console.log(error.message);
-    return res.status(500).json({ success: false, error: error.message });
+    console.error("Error in sendotp controller:", error);
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while sending OTP.",
+    });
   }
 };
+
 
 // Controller for Changing Password
 exports.changePassword = async (req, res) => {
