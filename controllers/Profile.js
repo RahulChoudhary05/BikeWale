@@ -2,6 +2,7 @@ const Profile = require("../models/Profile");
 const User = require("../models/User");
 const multer = require("multer");
 const upload = multer({ dest: 'uploads/' });
+const jwt = require("jsonwebtoken");
 
 // Updated code to handle edge cases properly
 exports.updateProfile = async (req, res) => {
@@ -108,42 +109,33 @@ exports.deleteAccount = async (req, res) => {
   }
 };
 
-exports.getAllUserDetails = async (req, res) => {
+const getAllUserDetails = async (req, res) => {
   try {
-    const userId = req.user.id;
-
-    // Fetch user and profile details
-    const userDetails = await User.findById(userId)
-      .populate("additionalDetail") // Profile linked to User
-      .populate({
-        path: "additionalDetail",
-        populate: [
-          { path: "bikesCreated", model: "AddBikeRent" }, // Bikes Created
-          { path: "bikesRented.bike", model: "AddBikeRent" }, // Rental history
-        ],
-      });
-
-    if (!userDetails) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ success: false, message: "Unauthorized: No token provided" });
     }
 
-    return res.status(200).json({
-      success: true,
-      message: "User data fetched successfully",
-      userDetails,
-    });
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    console.log("Decoded Token:", decoded);  // Debugging Log
+
+    const user = await User.findById(decoded.id).select("-password");  // Fetch user without password
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found!" });
+    }
+
+    res.json({ success: true, message: "User profile fetched", userDetails: user });
+
   } catch (error) {
-    console.error("Error fetching user details:", error.message);
-    return res.status(500).json({
-      success: false,
-      message: "An error occurred while fetching user details",
-      error: error.message,
-    });
+    console.error("Error fetching user profile:",
+      error.message);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+module.exports = getAllUserDetails;
 
 exports.updateDisplayPicture = async (req, res) => {
   try {
