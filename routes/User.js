@@ -7,10 +7,6 @@ const { login, signup, sendotp, changePassword } = require("../controllers/Auth"
 const { resetPasswordToken, resetPassword } = require("../controllers/ResetPassword");
 const { auth } = require("../middlewares/auth");
 
-const app = express();
-app.use(express.json());
-app.use(require("cookie-parser")()); 
-
 // Authentication routes
 router.post("/login", login);
 router.post("/signup", signup);
