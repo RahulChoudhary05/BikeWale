@@ -109,7 +109,7 @@ exports.deleteAccount = async (req, res) => {
   }
 };
 
-const getAllUserDetails = async (req, res) => {
+exports.getAllUserDetails = async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -134,8 +134,6 @@ const getAllUserDetails = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
-
-module.exports = getAllUserDetails;
 
 exports.updateDisplayPicture = async (req, res) => {
   try {
