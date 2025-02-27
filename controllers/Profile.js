@@ -110,26 +110,36 @@ exports.deleteAccount = async (req, res) => {
 
 exports.getAllUserDetails = async (req, res) => {
   try {
-    const userId = req.user.id; // Retrieved from middleware (decoded token)
-    const userDetails = await User.findById(userId).populate("additionalDetail").select("-password");
+    const userId = req.user.id;
+
+    // Fetch user and profile details
+    const userDetails = await User.findById(userId)
+      .populate("additionalDetail") // Profile linked to User
+      .populate({
+        path: "additionalDetail",
+        populate: [
+          { path: "bikesCreated", model: "AddBikeRent" }, // Bikes Created
+          { path: "bikesRented.bike", model: "AddBikeRent" }, // Rental history
+        ],
+      });
 
     if (!userDetails) {
       return res.status(404).json({
         success: false,
-        message: "User not found!",
+        message: "User not found",
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      message: "User profile fetched successfully",
+      message: "User data fetched successfully",
       userDetails,
     });
   } catch (error) {
-    console.error("Error fetching user profile:", error.message);
-    res.status(500).json({
+    console.error("Error fetching user details:", error.message);
+    return res.status(500).json({
       success: false,
-      message: "Server error",
+      message: "An error occurred while fetching user details",
       error: error.message,
     });
   }
