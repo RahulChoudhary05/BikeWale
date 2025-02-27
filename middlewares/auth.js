@@ -4,7 +4,9 @@ require("dotenv").config();
 
 exports.auth = async (req, res, next) => {
   try {
-    let token = req.body.token || req.cookies.token || req.headers.authorization?.replace("Bearer ", "");
+    const token =
+      req.cookies?.token || req.headers.authorization?.replace("Bearer ", "");
+
     if (!token) {
       return res.status(401).json({ success: false, message: "No token provided" });
     }
@@ -14,10 +16,10 @@ exports.auth = async (req, res, next) => {
       req.user = decoded;
       next();
     } catch (error) {
-      return res.status(401).json({ success: false, message: "Invalid token" });
+      return res.status(401).json({ success: false, message: "Invalid or expired token" });
     }
   } catch (error) {
-    console.error("Authentication error", error);
-    res.status(401).json({ success: false, message: "Token verification failed" });
+    console.error("Authentication error:", error);
+    res.status(500).json({ success: false, message: "Authentication failed" });
   }
 };

@@ -138,69 +138,60 @@ exports.signup = async (req, res) => {
 // Login controller for authenticating users
 exports.login = async (req, res) => {
   try {
-    // Get email and password from request body
     const { email, password } = req.body;
 
-    // Check if email or password is missing
     if (!email || !password) {
-      // Return 400 Bad Request status code with error message
       return res.status(400).json({
         success: false,
-        message: `Please Fill up All the Required Fields`,
+        message: "Please provide email and password",
       });
     }
 
-    // Find user with provided email
-    const user = await User.findOne({ email }).populate({ path: 'additionalDetails', options: { strictPopulate: false } });
-
-    // If user not found with provided email
+    // Check if user exists
+    const user = await User.findOne({ email });
     if (!user) {
-      // Return 401 Unauthorized status code with error message
       return res.status(401).json({
         success: false,
-        message: `User is not Registered with Us Please SignUp to Continue`,
+        message: "Email or password is incorrect",
       });
     }
 
-    // Generate JWT token and Compare Password
-    if (await bcrypt.compare(password, user.password)) {
-      const token = jwt.sign(
-        { email: user.email, id: user._id },
-        process.env.JWT_SECRET,
-        {
-          expiresIn: "24h",
-        }
-      );
-
-      // Save token to user document in database
-      user.token = token;
-      user.password = undefined;
-      // Set cookie for token and return success response
-      const options = {
-        expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-        httpOnly: true,
-      };
-      res.cookie("token", token, options).status(200).json({
-        success: true,
-        token,
-        user,
-        message: `User Login Success`,
-      });
-    } else {
+    // Validate password
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    if (!isPasswordMatch) {
       return res.status(401).json({
         success: false,
-        message: `Password is incorrect`,
+        message: "Email or password is incorrect",
       });
     }
-  } catch (error) {
-    console.error(error);
-    // Return 500 Internal Server Error status code with error message
-    return res.status(500).json({
-      success: false,
-      message: `Login Failure Please Try Again`,
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user._id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "24h" }
+    );
+
+    // Exclude password before responding
+    user.password = undefined;
+
+    // Save token in cookies
+    const options = {
+      httpOnly: true,
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
+    };
+
+    res.cookie("token", token, options).status(200).json({
+      success: true,
+      message: "Login successful",
+      user,
     });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ success: false, message: "Login failed" });
   }
 };
+
 
 // Send OTP For Email Verification
 exports.sendotp = async (req, res) => {
