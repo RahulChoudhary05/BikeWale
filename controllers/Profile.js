@@ -110,40 +110,33 @@ exports.deleteAccount = async (req, res) => {
 
 exports.getAllUserDetails = async (req, res) => {
   try {
+    // Retrieve user ID from request object (set in auth middleware)
     const userId = req.user.id;
 
-    // Fetch user and profile details
-    const userDetails = await User.findById(userId)
-      .populate("additionalDetail") // Profile linked to User
-      .populate({
-        path: "additionalDetail",
-        populate: [
-          { path: "bikesCreated", model: "AddBikeRent" }, // Bikes Created
-          { path: "bikesRented.bike", model: "AddBikeRent" }, // Rental history
-        ],
-      });
+    // Fetch user details and populate related fields
+    const user = await User.findById(userId).populate('additionalDetail');
 
-    if (!userDetails) {
+    if (!user) {
       return res.status(404).json({
         success: false,
         message: "User not found",
       });
     }
 
-    return res.status(200).json({
+    // Send success response with user profile data
+    res.status(200).json({
       success: true,
-      message: "User data fetched successfully",
-      userDetails,
+      user, // Return entire user profile
     });
   } catch (error) {
-    console.error("Error fetching user details:", error.message);
-    return res.status(500).json({
+    console.error("Error fetching user profile:", error.message);
+    res.status(500).json({
       success: false,
-      message: "An error occurred while fetching user details",
-      error: error.message,
+      message: "Failed to fetch user profile",
     });
   }
 };
+
 
 exports.updateDisplayPicture = async (req, res) => {
   try {
