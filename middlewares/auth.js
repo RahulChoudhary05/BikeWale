@@ -1,24 +1,23 @@
 const jwt = require("jsonwebtoken");
+const User = require("../models/User");
+require("dotenv").config();
 
 exports.auth = async (req, res, next) => {
   try {
-    const token = req.headers.authorization?.replace("Bearer ", ""); // Extract token from Authorization header
+    let token = req.body.token || req.cookies.token || req.headers.authorization?.replace("Bearer ", "");
     if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: "No token provided",
-      });
+      return res.status(401).json({ success: false, message: "No token provided" });
     }
 
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // Save the decoded user info (id, email) in the request object
-    next(); // Continue to the next middleware or route handler
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = decoded;
+      next();
+    } catch (error) {
+      return res.status(401).json({ success: false, message: "Invalid token" });
+    }
   } catch (error) {
-    console.error("Authentication error:", error.message);
-    return res.status(401).json({
-      success: false,
-      message: "Invalid or expired token",
-    });
+    console.error("Authentication error", error);
+    res.status(401).json({ success: false, message: "Token verification failed" });
   }
 };
