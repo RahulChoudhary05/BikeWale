@@ -48,8 +48,7 @@ exports.signup = async (req, res) => {
     if (password !== confirmPassword) {
       return res.status(400).json({
         success: false,
-        message:
-          "Password and Confirm Password do not match. Please try again.",
+        message: "Password and Confirm Password do not match. Please try again.",
       });
     }
 
@@ -63,9 +62,8 @@ exports.signup = async (req, res) => {
     }
 
     // Find the most recent OTP for the email
-    const response = await OTP.find({ email }).sort({ createdAt: -1 }).limit(1);
-    if (response.length === 0 || otp !== response[0].otp) {
-      // OTP not found for the email or invalid OTP
+    const recentOTP = await OTP.findOne({ email }).sort({ createdAt: -1 });
+    if (!recentOTP || otp !== recentOTP.otp) {
       return res.status(400).json({
         success: false,
         message: "The OTP is not valid",
@@ -74,11 +72,6 @@ exports.signup = async (req, res) => {
 
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Validate the driving license number
-    // if (!isValidDrivingLicenseNumber(drivingLicenseNo)) {
-    //   return res.status(400).json({ success: false, message: "Invalid Indian driving license number format" });
-    // }
 
     // Check if user with the same driving license number already exists
     const existingLicenseUser = await User.findOne({ drivingLicenseNo });
@@ -109,12 +102,11 @@ exports.signup = async (req, res) => {
       contactNumber,
       drivingLicenseNo,
       password: hashedPassword,
-      additionalDetail: profileDetails._id, // Assuming this is the profile ID
+      additionalDetail: profileDetails._id,
       image: `https://api.dicebear.com/5.x/initials/jpg?seed=${fullName}`,
-      profile: profileDetails._id, // Ensure this is set
+      profile: profileDetails._id,
     });
 
-    // Return response with all necessary details
     return res.status(200).json({
       success: true,
       user: {
@@ -139,6 +131,7 @@ exports.signup = async (req, res) => {
     });
   }
 };
+
 
 // Login controller for authenticating users
 exports.login = async (req, res) => {
