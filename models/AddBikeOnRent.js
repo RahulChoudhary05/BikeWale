@@ -55,7 +55,7 @@ const addbikerentSchema = new mongoose.Schema({
   ],
   profile: {
     type: mongoose.Schema.Types.ObjectId, // Reference to the User owning the bike
-    ref: "User",
+    ref: "Profile",
     required: true,
   },
   averageRating: {

@@ -175,7 +175,7 @@ exports.getAllBikes = async (req, res) => {
     const allBikes = await AddBikeRent.find() // Fetch all bikes
       .populate({
         path: "profile", // Populate the profile field
-        select: "fullName email contactNumber profileImage", // Select the fields you want from the Profile model
+        select: "fullName email contactNumber profileImage upiId", // Select the fields you want from the Profile model
       })
       .select("typeofbike bikemodel about rentprice registeredBikeNo bikepic tag"); // Select the fields you want from the AddBikeRent model
 
