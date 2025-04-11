@@ -2,6 +2,16 @@ const mongoose = require("mongoose");
 
 // Updated Profile Schema
 const profileSchema = new mongoose.Schema({
+  fullName: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  email: {
+    type: String,
+    required: true,
+    trim: true,
+  },
   gender: {
     type: String,
   },
@@ -13,6 +23,9 @@ const profileSchema = new mongoose.Schema({
     trim: true,
   },
   contactNumber: {
+    type: String,
+  },
+  upiId: { // New UPI ID field
     type: String,
   },
   // New Fields

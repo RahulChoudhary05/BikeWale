@@ -92,9 +92,14 @@ exports.signup = async (req, res) => {
 
     // Create the additional profile for user
     const profileDetails = await Profile.create({
+      fullName,
+      email,
+      contactNumber,
+      drivingLicenseNo,
       gender: null,
       dateofBirth: null,
       about: null,
+      upiId: null,
     });
 
     // Create the user with the validated driving license and contact number
@@ -179,6 +184,14 @@ if (await bcrypt.compare(password, user.password)) {
   // Save token to user document in database
   user.token = token;
   user.password = undefined;
+
+  const profile = await Profile.findById(user.additionalDetail);
+      if (profile) {
+        profile.fullName = user.fullName;
+        profile.email = user.email;
+        profile.contactNumber = user.contactNumber;
+        await profile.save();
+      }
   // Set cookie for token and return success response
   const options = {
     expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
