@@ -110,7 +110,7 @@ exports.signup = async (req, res) => {
       drivingLicenseNo,
       password: hashedPassword,
       additionalDetail: profileDetails._id, // Assuming this is the profile ID
-      image: `https://api.dicebear.com/5.x/initials/svg?seed=${fullName}`,
+      image: `https://api.dicebear.com/5.x/initials/jpg?seed=${fullName}`,
       profile: profileDetails._id, // Ensure this is set
     });
 
