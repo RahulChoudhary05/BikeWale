@@ -29,7 +29,7 @@ const userSchema = new mongoose.Schema({
   },
   additionalDetail: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Profile", // Links a User to their profile
+    ref: "Profile", // Ensure this is correct
   },
   image: {
     type: String,
@@ -40,6 +40,10 @@ const userSchema = new mongoose.Schema({
   },
   resetPasswordExpires: {
     type: Date,
+  },
+  profile: {
+    type: mongoose.Schema.Types.ObjectId, // Ensure this is defined
+    ref: "Profile",
   },
 });
 

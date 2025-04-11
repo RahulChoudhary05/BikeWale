@@ -18,6 +18,17 @@ exports.addBikeOnRental = async (req, res) => {
 
     const userId = req.user.id;
 
+    // Log the user object for debugging
+    console.log("User  object:", req.user);
+
+    // Check if profile ID exists
+    if (!req.user.profile) {
+      return res.status(400).json({
+        success: false,
+        message: "User  profile is required.",
+      });
+    }
+
     // Upload the image to Cloudinary
     const uploadedImage = await uploadImageToCloudinary(req.files.bikepic, "BikePictures");
 
@@ -29,13 +40,13 @@ exports.addBikeOnRental = async (req, res) => {
       registeredBikeNo,
       rentprice,
       bikepic: uploadedImage.secure_url, // Save the URL of the uploaded image
-      tag: JSON.parse(tag), // Ensure `tag` is parsed to an array
-      profile: userId,
+      tag: JSON.parse(tag), // Ensure tag is parsed to an array
+      profile: req.user.profile, // Ensure the profile ID is correctly set
     });
 
     // Update the user's profile to include the bike
     const updatedProfile = await Profile.findByIdAndUpdate(
-      userId,
+      req.user.profile, // Use the profile ID from the user
       { $push: { bikesCreated: newBike._id } }, // Push the bike ID to the user's created list
       { new: true }
     );
@@ -54,8 +65,6 @@ exports.addBikeOnRental = async (req, res) => {
     });
   }
 };
-
-
 
 // Edit bike details
 exports.editBikeDetails = async (req, res) => {
@@ -160,14 +169,17 @@ exports.deleteBike = async (req, res) => {
   }
 };
 
-
-// Get all bikes
+// Get all bikes with user profile data
 exports.getAllBikes = async (req, res) => {
   try {
-    const allBikes = await AddBikeRent.find() // Fetch all bikes regardless of status
-      .select("typeofbike bikemodel about rentprice registeredBikeNo bikepic tag");
+    const allBikes = await AddBikeRent.find() // Fetch all bikes
+      .populate({
+        path: "profile", // Populate the profile field
+        select: "fullName email contactNumber profileImage", // Select the fields you want from the Profile model
+      })
+      .select("typeofbike bikemodel about rentprice registeredBikeNo bikepic tag"); // Select the fields you want from the AddBikeRent model
 
-    console.log("All Bikes (no filter):", allBikes);
+    console.log("All Bikes (with profiles):", allBikes);
 
     if (allBikes.length === 0) {
       return res.status(200).json({ success: true, data: [], message: "No bikes found" });
@@ -207,26 +219,25 @@ exports.getFullBikeDetails = async (req, res) => {
 // Fetch Bike Details
 exports.getBikeDetails = async (req, res) => {
   try {
-    const { bikeID } = req.params; // Extract bikeID from the request URL
+    const { bikeID } = req.params;
 
-    // Validate bikeID
     if (!bikeID) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Bike ID is required" });
+      return res.status(400).json({ success: false, message: "Bike ID is required" });
     }
 
-    // Fetch bike details and populate the profile with user data
+    // Populate profile (which is from Profile model, not User)
     const bikeDetails = await AddBikeRent.findById(bikeID)
-      .populate("profile", "fullName email image contactNumber") // Fetch specific fields of the user
+      .populate({
+        path: "profile",
+        model: "Profile", // ensure you're referencing the Profile model
+        select: "fullName email contactNumber profileImage", // adjust based on actual schema
+      })
       .exec();
 
-    // If bike is not found, return an error
     if (!bikeDetails) {
       return res.status(404).json({ success: false, message: "Bike not found" });
     }
 
-    // Return bike details
     return res.status(200).json({
       success: true,
       data: bikeDetails,

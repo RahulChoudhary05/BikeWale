@@ -8,7 +8,6 @@ const { passwordUpdated } = require("../mail/templates/passwordUpdate");
 const Profile = require("../models/Profile");
 require("dotenv").config();
 
-
 // function isValidDrivingLicenseNumber(drivingLicenseNo) {
 //   // Regular expression to check valid Indian driving license numbers
 //   const regex = /^(([A-Z]{2}[0-9]{2})( )|([A-Z]{2}-[0-9]{2}))((19|20)[0-9][0-9])[0-9]{7}$/;
@@ -49,7 +48,8 @@ exports.signup = async (req, res) => {
     if (password !== confirmPassword) {
       return res.status(400).json({
         success: false,
-        message: "Password and Confirm Password do not match. Please try again.",
+        message:
+          "Password and Confirm Password do not match. Please try again.",
       });
     }
 
@@ -85,7 +85,8 @@ exports.signup = async (req, res) => {
     if (existingLicenseUser) {
       return res.status(400).json({
         success: false,
-        message: "User with this driving license number already exists. Please use a different driving license number.",
+        message:
+          "User with this driving license number already exists. Please use a different driving license number.",
       });
     }
 
@@ -103,10 +104,10 @@ exports.signup = async (req, res) => {
       contactNumber,
       drivingLicenseNo,
       password: hashedPassword,
-      additionalDetail: profileDetails._id,
+      additionalDetail: profileDetails._id, // Assuming this is the profile ID
       image: `https://api.dicebear.com/5.x/initials/svg?seed=${fullName}`,
+      profile: profileDetails._id, // Ensure this is set
     });
-
 
     // Return response with all necessary details
     return res.status(200).json({
@@ -134,7 +135,6 @@ exports.signup = async (req, res) => {
   }
 };
 
-
 // Login controller for authenticating users
 exports.login = async (req, res) => {
   try {
@@ -151,7 +151,10 @@ exports.login = async (req, res) => {
     }
 
     // Find user with provided email
-    const user = await User.findOne({ email }).populate({ path: 'additionalDetails', options: { strictPopulate: false } });
+    const user = await User.findOne({ email }).populate({
+      path: "additionalDetails",
+      options: { strictPopulate: false },
+    });
 
     // If user not found with provided email
     if (!user) {
@@ -163,30 +166,31 @@ exports.login = async (req, res) => {
     }
 
     // Generate JWT token and Compare Password
-    if (await bcrypt.compare(password, user.password)) {
-      const token = jwt.sign(
-        { email: user.email, id: user._id },
-        process.env.JWT_SECRET,
-        {
-          expiresIn: "24h",
-        }
-      );
+    // Generate JWT token and Compare Password
+if (await bcrypt.compare(password, user.password)) {
+  const token = jwt.sign(
+    { email: user.email, id: user._id, profile: user.profile }, // Include profile ID in the token
+    process.env.JWT_SECRET,
+    {
+      expiresIn: "24h",
+    }
+  );
 
-      // Save token to user document in database
-      user.token = token;
-      user.password = undefined;
-      // Set cookie for token and return success response
-      const options = {
-        expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-        httpOnly: true,
-      };
-      res.cookie("token", token, options).status(200).json({
-        success: true,
-        token,
-        user,
-        message: `User Login Success`,
-      });
-    } else {
+  // Save token to user document in database
+  user.token = token;
+  user.password = undefined;
+  // Set cookie for token and return success response
+  const options = {
+    expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+    httpOnly: true,
+  };
+  res.cookie("token", token, options).status(200).json({
+    success: true,
+    token,
+    user,
+    message: `User  Login Success`,
+  });
+}else {
       return res.status(401).json({
         success: false,
         message: `Password is incorrect`,
