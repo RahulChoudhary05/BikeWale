@@ -11,7 +11,7 @@ exports.updateProfile = async (req, res) => {
       lastName,
       dateofBirth = "",
       about = "",
-      contactNumber = "",
+      contactNumber,
       gender = "",
       upiId = "",
     } = req.body;
@@ -56,10 +56,17 @@ exports.updateProfile = async (req, res) => {
 
     profile.dateofBirth = dateofBirth;
     profile.about = about;
-    profile.contactNumber = contactNumber;
     profile.gender = gender;
     profile.upiId = upiId;
     await profile.save();
+
+    // Only update contactNumber if a new value is provided
+    if (contactNumber !== undefined) {
+      profile.contactNumber = contactNumber; // Update only if provided
+    }
+
+    await profile.save();
+
 
     // Return the updated details
     const updatedUserDetails = await User.findById(id).populate("additionalDetail").exec();
