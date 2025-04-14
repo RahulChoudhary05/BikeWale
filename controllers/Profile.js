@@ -197,7 +197,7 @@ exports.updateDisplayPicture = async (req, res) => {
       // TODO: Save file URL or path to the database for this user
       const fileUrl = '/uploads/' + displayPicture.filename; // Or your S3/cloud location
 
-      console.log(User ${userId} uploaded profile picture: ${fileUrl});
+      console.log(`User ${userId} uploaded profile picture: ${fileUrl}`);
 
       return res.status(200).json({
         success: true,
