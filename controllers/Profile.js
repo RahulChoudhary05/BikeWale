@@ -6,7 +6,6 @@ const upload = multer({ dest: 'uploads/' });
 // Updated code to handle edge cases properly
 exports.updateProfile = async (req, res) => {
   try {
-    // Extracting data from request body
     const {
       fullName,
       contactNumber,
@@ -14,8 +13,9 @@ exports.updateProfile = async (req, res) => {
       about = "",
       gender = "",
       upiId = "",
+      drivingLicenseNo, 
     } = req.body;
-  
+
     const id = req.user.id;
 
     // Find the user and populate additionalDetail
@@ -41,31 +41,48 @@ exports.updateProfile = async (req, res) => {
 
     const profileId = profileData._id;
 
-    // Update user's fullName if provided
-    if (fullName) {
-      userDetails.fullName = fullName; // Set the fullName in the User schema
+    // Update User details
+    let hasUpdated = false;
 
-      // Update the fullName in the Profile schema
-      const profile = await Profile.findById(profileId);
-      if (profile) {
-        profile.fullName = fullName; // Set the fullName in the Profile schema
-        await profile.save();  // Save updated Profile details
-      }
+    if (fullName) {
+      userDetails.fullName = fullName;
+      hasUpdated = true;
     }
-    
+
+    if (contactNumber) {
+      userDetails.contactNumber = contactNumber;
+      hasUpdated = true;
+    }
+
+    if (drivingLicenseNo) {
+      userDetails.drivingLicenseNo = drivingLicenseNo;
+      hasUpdated = true;
+    } else {
+      return res.status(400).json({
+          success: false,
+          message: "drivingLicenseNo is required.", 
+      });
+    }
+
     await userDetails.save(); // Save updated User details
 
-    // Update other profile fields only if provided
-    const profile = await Profile.findById(profileId); // Fetch profile again to ensure it's the latest
-    if (profile) {
-      if (dateofBirth) profile.dateofBirth = dateofBirth;
-      if (about) profile.about = about;
-      if (gender) profile.gender = gender;
-      if (upiId) profile.upiId = upiId;
-      if (contactNumber) profile.contactNumber = contactNumber;
-
-      await profile.save(); // Save updated Profile details
+    // Update Profile details
+    const profile = await Profile.findById(profileId);
+    if (!profile) {
+      return res.status(404).json({
+        success: false,
+        message: "Profile not found",
+      });
     }
+
+    // Update profile fields, only if provided
+    if (dateofBirth) profile.dateofBirth = dateofBirth;
+    if (about) profile.about = about;
+    if (gender) profile.gender = gender;
+    if (upiId) profile.upiId = upiId;
+    if (contactNumber) profile.contactNumber = contactNumber;
+
+    await profile.save(); // Save updated Profile details
 
     // Return the updated user details
     const updatedUserDetails = await User.findById(id).populate("additionalDetail").exec();
