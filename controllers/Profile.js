@@ -7,8 +7,7 @@ const upload = multer({ dest: 'uploads/' });
 exports.updateProfile = async (req, res) => {
   try {
     const {
-      firstName,
-      lastName,
+      fullName,
       dateofBirth = "",
       about = "",
       contactNumber,
