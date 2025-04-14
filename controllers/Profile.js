@@ -6,14 +6,16 @@ const upload = multer({ dest: 'uploads/' });
 // Updated code to handle edge cases properly
 exports.updateProfile = async (req, res) => {
   try {
+    // Extracting data from request body
     const {
       fullName,
+      contactNumber,
       dateofBirth = "",
       about = "",
-      contactNumber,
       gender = "",
       upiId = "",
     } = req.body;
+  
     const id = req.user.id;
 
     // Find the user and populate additionalDetail
@@ -39,10 +41,12 @@ exports.updateProfile = async (req, res) => {
 
     const profileId = profileData._id;
 
-    // Update user's details if provided
-    if (firstName) userDetails.firstName = firstName;
-    if (lastName) userDetails.lastName = lastName;
-    await userDetails.save();
+    // Update user's fullName if provided
+    if (fullName) {
+      userDetails.fullName = fullName; // Set the fullName in the User schema
+    }
+    
+    await userDetails.save(); // Save updated User details
 
     // Update profile details
     const profile = await Profile.findById(profileId);
@@ -53,21 +57,16 @@ exports.updateProfile = async (req, res) => {
       });
     }
 
-    profile.dateofBirth = dateofBirth;
-    profile.about = about;
-    profile.gender = gender;
-    profile.upiId = upiId;
-    await profile.save();
+    // Update profile fields, only if provided
+    if (dateofBirth) profile.dateofBirth = dateofBirth;
+    if (about) profile.about = about;
+    if (gender) profile.gender = gender;
+    if (upiId) profile.upiId = upiId;
+    if (contactNumber) profile.contactNumber = contactNumber;
 
-    // Only update contactNumber if a new value is provided
-    if (contactNumber !== undefined) {
-      profile.contactNumber = contactNumber; // Update only if provided
-    }
+    await profile.save(); // Save updated Profile details
 
-    await profile.save();
-
-
-    // Return the updated details
+    // Return the updated user details
     const updatedUserDetails = await User.findById(id).populate("additionalDetail").exec();
     return res.status(200).json({
       success: true,
