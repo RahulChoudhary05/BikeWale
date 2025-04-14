@@ -1,7 +1,7 @@
 const Profile = require("../models/Profile");
 const User = require("../models/User");
 const multer = require("multer");
-const upload = multer({ dest: 'uploads/' });
+const cloudinary = require("cloudinary").v2; 
 
 // Updated code to handle edge cases properly
 exports.updateProfile = async (req, res) => {
@@ -170,44 +170,46 @@ exports.getAllUserDetails = async (req, res) => {
   }
 };
 
+// Controller function to handle the display picture update
 exports.updateDisplayPicture = async (req, res) => {
   try {
-    upload.single('displayPicture')(req, res, async (err) => {
-      if (err instanceof multer.MulterError) {
-        console.error('Multer error:', err);
-        return res.status(400).json({ success: false, message: 'File upload error' });
-      } else if (err) {
-        console.error('Unexpected error during upload:', err);
-        return res.status(500).json({ success: false, message: 'Internal server error' });
-      }
+    const userId = req.user.id;
 
-      // Log the incoming request to debug
-      console.log('Request received for image upload');
-      console.log('Request body:', req.body);
-      console.log('Uploaded file:', req.file);
-
-      const displayPicture = req.file;
-
-      if (!displayPicture) {
-        return res.status(400).json({ success: false, message: 'No file uploaded' });
-      }
-
-      const userId = req.user.id;
-
-      // TODO: Save file URL or path to the database for this user
-      const fileUrl = '/uploads/' + displayPicture.filename; // Or your S3/cloud location
-
-      console.log(`User ${userId} uploaded profile picture: ${fileUrl}`);
-
-      return res.status(200).json({
-        success: true,
-        message: 'Display picture updated successfully',
-        file: displayPicture,
-        fileUrl,
+    // Check if file is uploaded
+    if (!req.files || !req.files.displayPicture) {
+      return res.status(400).json({
+        success: false,
+        message: "No display picture file uploaded",
       });
+    }
+
+    const file = req.files.displayPicture;
+
+    // Upload to Cloudinary
+    const result = await cloudinary.uploader.upload(file.tempFilePath, {
+      folder: "ProfilePictures",
+      resource_type: "image",
     });
-  } catch (error) {
-    console.error('Unexpected error in controller:', error);
-    return res.status(500).json({ success: false, message: 'Error updating display picture' });
+
+    // Save image URL in profile
+    const updatedProfile = await Profile.findOneAndUpdate(
+      { _id: userId },
+      { displayPicture: result.secure_url },
+      { new: true }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Display picture updated successfully",
+      fileUrl: result.secure_url,
+      profile: updatedProfile,
+    });
+  } catch (err) {
+    console.error("❌ Error updating display picture:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while updating display picture",
+      error: err.message,
+    });
   }
 };

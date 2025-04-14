@@ -28,6 +28,11 @@ const profileSchema = new mongoose.Schema({
   upiId: { // New UPI ID field
     type: String,
   },
+  displayPicture: {
+    type: String,
+    default: "", // Optional default
+  },
+  
   // New Fields
   bikesCreated: [
     {
