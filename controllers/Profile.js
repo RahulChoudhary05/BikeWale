@@ -191,18 +191,28 @@ exports.updateDisplayPicture = async (req, res) => {
       resource_type: "image",
     });
 
-    // Save image URL in profile
-    const updatedProfile = await Profile.findOneAndUpdate(
-      { _id: userId },
-      { displayPicture: result.secure_url },
+    const imageUrl = result.secure_url;
+
+    // 1. Update image in Profile model
+    const profileUpdate = await Profile.findOneAndUpdate(
+      { _id: req.user.additionalDetail }, // Match Profile ID
+      { displayPicture: imageUrl },
+      { new: true }
+    );
+
+    // 2. Update image in User model
+    const userUpdate = await User.findByIdAndUpdate(
+      userId,
+      { image: imageUrl },
       { new: true }
     );
 
     return res.status(200).json({
       success: true,
       message: "Display picture updated successfully",
-      fileUrl: result.secure_url,
-      profile: updatedProfile,
+      imageUrl,
+      profile: profileUpdate,
+      user: userUpdate,
     });
   } catch (err) {
     console.error("❌ Error updating display picture:", err);

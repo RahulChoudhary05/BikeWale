@@ -32,7 +32,6 @@ const profileSchema = new mongoose.Schema({
     type: String,
     default: "", // Optional default
   },
-  
   // New Fields
   bikesCreated: [
     {
