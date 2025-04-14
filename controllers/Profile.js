@@ -44,27 +44,28 @@ exports.updateProfile = async (req, res) => {
     // Update user's fullName if provided
     if (fullName) {
       userDetails.fullName = fullName; // Set the fullName in the User schema
+
+      // Update the fullName in the Profile schema
+      const profile = await Profile.findById(profileId);
+      if (profile) {
+        profile.fullName = fullName; // Set the fullName in the Profile schema
+        await profile.save();  // Save updated Profile details
+      }
     }
     
     await userDetails.save(); // Save updated User details
 
-    // Update profile details
-    const profile = await Profile.findById(profileId);
-    if (!profile) {
-      return res.status(404).json({
-        success: false,
-        message: "Profile not found",
-      });
+    // Update other profile fields only if provided
+    const profile = await Profile.findById(profileId); // Fetch profile again to ensure it's the latest
+    if (profile) {
+      if (dateofBirth) profile.dateofBirth = dateofBirth;
+      if (about) profile.about = about;
+      if (gender) profile.gender = gender;
+      if (upiId) profile.upiId = upiId;
+      if (contactNumber) profile.contactNumber = contactNumber;
+
+      await profile.save(); // Save updated Profile details
     }
-
-    // Update profile fields, only if provided
-    if (dateofBirth) profile.dateofBirth = dateofBirth;
-    if (about) profile.about = about;
-    if (gender) profile.gender = gender;
-    if (upiId) profile.upiId = upiId;
-    if (contactNumber) profile.contactNumber = contactNumber;
-
-    await profile.save(); // Save updated Profile details
 
     // Return the updated user details
     const updatedUserDetails = await User.findById(id).populate("additionalDetail").exec();
