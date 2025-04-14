@@ -195,7 +195,7 @@ exports.updateDisplayPicture = async (req, res) => {
       const userId = req.user.id;
 
       // TODO: Save file URL or path to the database for this user
-      const fileUrl = /uploads/${displayPicture.filename}; // Or your S3/cloud location
+      const fileUrl = '/uploads/' + displayPicture.filename; // Or your S3/cloud location
 
       console.log(User ${userId} uploaded profile picture: ${fileUrl});
 
