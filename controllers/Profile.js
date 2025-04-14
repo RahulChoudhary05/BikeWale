@@ -174,25 +174,40 @@ exports.updateDisplayPicture = async (req, res) => {
   try {
     upload.single('displayPicture')(req, res, async (err) => {
       if (err instanceof multer.MulterError) {
+        console.error('Multer error:', err);
         return res.status(400).json({ success: false, message: 'File upload error' });
       } else if (err) {
+        console.error('Unexpected error during upload:', err);
         return res.status(500).json({ success: false, message: 'Internal server error' });
       }
 
-      // Process the uploaded file and update the display picture in the database
+      // Log the incoming request to debug
+      console.log('Request received for image upload');
+      console.log('Request body:', req.body);
+      console.log('Uploaded file:', req.file);
+
       const displayPicture = req.file;
+
+      if (!displayPicture) {
+        return res.status(400).json({ success: false, message: 'No file uploaded' });
+      }
+
       const userId = req.user.id;
-      // Your logic to handle the file and update the display picture in the database
-      // Example: save the file URL to the user's profile
+
+      // TODO: Save file URL or path to the database for this user
+      const fileUrl = /uploads/${displayPicture.filename}; // Or your S3/cloud location
+
+      console.log(User ${userId} uploaded profile picture: ${fileUrl});
 
       return res.status(200).json({
         success: true,
         message: 'Display picture updated successfully',
         file: displayPicture,
+        fileUrl,
       });
     });
   } catch (error) {
-    console.error(error);
+    console.error('Unexpected error in controller:', error);
     return res.status(500).json({ success: false, message: 'Error updating display picture' });
   }
 };
