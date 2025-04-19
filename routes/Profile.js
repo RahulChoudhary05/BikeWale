@@ -5,7 +5,7 @@ const { deleteAccount, updateProfile, getAllUserDetails, updateDisplayPicture } 
 
 // Profile routes
 router.delete("/delete-profile", auth, deleteAccount); // DELETE /profile to delete account
-router.put("/update-profile", auth, updateProfile); // PUT /profile to update profile
+router.patch("/update-profile", auth, updateProfile); // PUT /profile to update profile
 router.get("/details", auth, getAllUserDetails); // GET /profile/details to fetch user details
 router.put("/display-picture", auth, updateDisplayPicture); // PUT /profile/display-picture to update the display picture
 
