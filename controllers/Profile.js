@@ -13,7 +13,7 @@ exports.updateProfile = async (req, res) => {
       about = "",
       gender = "",
       upiId = "",
-      drivingLicenseNo, 
+      drivingLicenseNo,
     } = req.body;
 
     const id = req.user.id;
@@ -55,16 +55,13 @@ exports.updateProfile = async (req, res) => {
     }
 
     if (drivingLicenseNo) {
-  userDetails.drivingLicenseNo = drivingLicenseNo;
-  hasUpdated = true;
-} else {
-      return res.status(400).json({
-          success: false,
-          message: "drivingLicenseNo is required.", 
-      });
+      userDetails.drivingLicenseNo = drivingLicenseNo;
+      hasUpdated = true;
     }
 
-    await userDetails.save(); // Save updated User details
+    if (hasUpdated) {
+      await userDetails.save(); // Save updated User details
+    }
 
     // Update Profile details
     const profile = await Profile.findById(profileId);
