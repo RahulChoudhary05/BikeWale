@@ -55,9 +55,9 @@ exports.updateProfile = async (req, res) => {
     }
 
     if (drivingLicenseNo) {
-      userDetails.drivingLicenseNo = drivingLicenseNo;
-      hasUpdated = true;
-    } else {
+  userDetails.drivingLicenseNo = drivingLicenseNo;
+  hasUpdated = true;
+} else {
       return res.status(400).json({
           success: false,
           message: "drivingLicenseNo is required.", 
