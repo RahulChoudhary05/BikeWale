@@ -12,7 +12,8 @@ const userRoutes = require("./routes/User");
 const profileRoutes = require("./routes/Profile");
 const bikeRoutes = require("./routes/Bike");
 const contactUsRoute = require("./routes/Contact");
-const walletRoutes = require("./routes/Wallet");
+// const walletRoutes = require("./routes/Wallet");
+const cartRoutes = require("./routes/Cart")
 
 // Configuration
 dotenv.config();
@@ -47,7 +48,8 @@ app.use("/api/v1/auth", userRoutes);
 app.use("/api/v1/profile", profileRoutes);
 app.use("/api/v1/bike", bikeRoutes); // Bike routes
 app.use("/api/v1/reach", contactUsRoute);
-app.use("/api/v1/wallet", walletRoutes);
+// app.use("/api/v1/wallet", walletRoutes);
+app.use("/api/v1/cart", cartRoutes);
 
 // Default Route
 app.get("/", (req, res) => {

@@ -253,24 +253,6 @@ exports.getBikeDetails = async (req, res) => {
   }
 };
 
-exports.rentBike = async (req, res) => {
-  const { bikeId, hours } = req.body;
-  try {
-    const bike = await AddBikeRent.findById(bikeId);
-    const totalPrice = bike.rentprice * hours;
-    const user = await User.findById(req.user.id);
-    if (user.walletBalance < totalPrice) {
-      return res.status(400).json({ success: false, message: "Insufficient funds" });
-    }
-    user.walletBalance -= totalPrice;
-    await user.save();
-    await Rental.create({ renterId: req.user.id, ownerId: bike.profile, bikeId, hours, totalPrice });
-    res.json({ success: true, message: "Bike rented successfully", totalPrice });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
 exports.updateHowManyTimeBikeRent = async (req, res) => {
   try {
     const { bikeID } = req.params;
