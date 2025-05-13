@@ -9,6 +9,8 @@ const {
   getBikeDetails,
   editBikeDetails,
   deleteBike,
+  rentBike,
+  updateHowManyTimeBikeRent
 } = require("../controllers/BikeRental");
 
 // Import Rating and Review controllers
@@ -20,9 +22,6 @@ const {
   getReviewsForBike,
 } = require("../controllers/RatingAndReview");
 
-// Import Controller to track number of times a bike is rented
-const { updateHowManyTimeBikeRent } = require("../controllers/HowManyTimeBikeRent");
-
 // Bike rental routes
 router.post("/addbikes", auth, addBikeOnRental);
 router.get("/allbikes", getAllBikes);
@@ -31,7 +30,8 @@ router.put("/update-bikedetails/:bikeID", auth, editBikeDetails);
 router.delete("/deletebikes/:bikeID", auth, deleteBike);
 
 // Bike rental usage tracking
-router.post("/bikes/:bikeID/rent", auth, updateHowManyTimeBikeRent); // Track bike rental count
+router.post("/bikerent/rent", auth, rentBike); // Track bike rental count
+router.post("/bikes/:bikeID/rent-count", auth, updateHowManyTimeBikeRent);
 
 // Updated Rating and Review routes
 router.post("/bikes/:bikeID/ratings", auth, createRating); // Create Rating and Review

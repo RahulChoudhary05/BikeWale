@@ -28,6 +28,10 @@ const profileSchema = new mongoose.Schema({
   upiId: { // New UPI ID field
     type: String,
   },
+  walletBalance: {
+    type: Number,
+    default: 0,
+  },
   displayPicture: {
     type: String,
     default: "", // Optional default

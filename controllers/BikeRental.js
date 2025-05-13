@@ -3,6 +3,7 @@ const User = require("../models/User");
 const HowManyTimeBikeRent = require("../models/HowManyTimeBikeRent");
 const { uploadImageToCloudinary } = require("../utils/imageUploader");
 const Profile = require("../models/Profile");
+const Rental = require("../models/Rental");
 
 exports.addBikeOnRental = async (req, res) => {
   try {
@@ -254,38 +255,30 @@ exports.getBikeDetails = async (req, res) => {
 
 exports.rentBike = async (req, res) => {
   try {
-    const userId = req.user.id;
-    const { bikeID } = req.params;
+    const { renterId, ownerId, bikeId, hours, pricePerHour } = req.body;
 
-    // Fetch the bike
-    const bike = await AddBikeRent.findById(bikeID);
-    if (!bike) {
-      return res.status(404).json({ success: false, message: "Bike not found" });
-    }
+    const totalPrice = hours * pricePerHour;
+    const platformFee = totalPrice * 0.10;
+    const ownerEarnings = totalPrice - platformFee;
 
-    // Update Profile to include bike in rental history
-    const userProfile = await Profile.findOneAndUpdate(
-      { _id: req.user.profile },
-      { $push: { bikesRented: { bike: bikeID, rentedAt: new Date() } } },
-      { new: true }
-    );
+    const renter = await User.findById(renterId);
+    if (renter.walletBalance < totalPrice) return res.status(400).json({ message: "Insufficient funds" });
 
-    // Mark bike rented by adding the user to BikeAvailable
-    bike.BikeAvailable.push(userId);
-    await bike.save();
+    // Deduct renter's balance
+    renter.walletBalance -= totalPrice;
+    await renter.save();
 
-    return res.status(200).json({
-      success: true,
-      message: "Bike rented successfully",
-      bike,
-    });
+    // Add earnings to bike owner
+    const owner = await User.findById(ownerId);
+    owner.walletBalance += ownerEarnings;
+    await owner.save();
+
+    // Save rental transaction
+    await Rental.create({ renterId, ownerId, bikeId, hours, totalPrice, platformFee, ownerEarnings, status: "completed" });
+
+    res.json({ message: "Bike rented successfully!", totalPrice, ownerEarnings, platformFee });
   } catch (error) {
-    console.error("Error renting bike:", error.message);
-    return res.status(500).json({
-      success: false,
-      message: "An error occurred while renting the bike",
-      error: error.message,
-    });
+    res.status(500).json({ error: error.message });
   }
 };
 
