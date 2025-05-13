@@ -2,6 +2,7 @@ const Profile = require("../models/Profile");
 const User = require("../models/User");
 const multer = require("multer");
 const cloudinary = require("cloudinary").v2; 
+const Wallet = require("../models/Wallet");
 
 // Updated code to handle edge cases properly
 exports.updateProfile = async (req, res) => {
@@ -115,6 +116,9 @@ exports.deleteAccount = async (req, res) => {
 
     // Delete the user
     await User.findByIdAndDelete(id);
+
+    // Delete the wallet
+    await Wallet.findOneAndDelete({ user: id });
 
     return res.status(200).json({
       success: true,

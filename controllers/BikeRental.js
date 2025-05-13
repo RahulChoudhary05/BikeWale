@@ -254,31 +254,20 @@ exports.getBikeDetails = async (req, res) => {
 };
 
 exports.rentBike = async (req, res) => {
+  const { bikeId, hours } = req.body;
   try {
-    const { renterId, ownerId, bikeId, hours, pricePerHour } = req.body;
-
-    const totalPrice = hours * pricePerHour;
-    const platformFee = totalPrice * 0.10;
-    const ownerEarnings = totalPrice - platformFee;
-
-    const renter = await User.findById(renterId);
-    if (renter.walletBalance < totalPrice) return res.status(400).json({ message: "Insufficient funds" });
-
-    // Deduct renter's balance
-    renter.walletBalance -= totalPrice;
-    await renter.save();
-
-    // Add earnings to bike owner
-    const owner = await User.findById(ownerId);
-    owner.walletBalance += ownerEarnings;
-    await owner.save();
-
-    // Save rental transaction
-    await Rental.create({ renterId, ownerId, bikeId, hours, totalPrice, platformFee, ownerEarnings, status: "completed" });
-
-    res.json({ message: "Bike rented successfully!", totalPrice, ownerEarnings, platformFee });
+    const bike = await AddBikeRent.findById(bikeId);
+    const totalPrice = bike.rentprice * hours;
+    const user = await User.findById(req.user.id);
+    if (user.walletBalance < totalPrice) {
+      return res.status(400).json({ success: false, message: "Insufficient funds" });
+    }
+    user.walletBalance -= totalPrice;
+    await user.save();
+    await Rental.create({ renterId: req.user.id, ownerId: bike.profile, bikeId, hours, totalPrice });
+    res.json({ success: true, message: "Bike rented successfully", totalPrice });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 

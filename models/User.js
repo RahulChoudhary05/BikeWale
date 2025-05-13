@@ -45,7 +45,10 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId, // Ensure this is defined
     ref: "Profile",
   },
-  walletBalance: { type: Number, default: 0 }, 
+  walletBalance: {
+    type: Number,
+    default: 0,
+  },
   isBikeOwner: { type: Boolean, default: false } 
 });
 

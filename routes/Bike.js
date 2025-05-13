@@ -30,7 +30,7 @@ router.put("/update-bikedetails/:bikeID", auth, editBikeDetails);
 router.delete("/deletebikes/:bikeID", auth, deleteBike);
 
 // Bike rental usage tracking
-router.post("/bikerent/rent", auth, rentBike); // Track bike rental count
+router.post("/bikerent", auth, rentBike); // Track bike rental count
 router.post("/bikes/:bikeID/rent-count", auth, updateHowManyTimeBikeRent);
 
 // Updated Rating and Review routes
